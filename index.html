@@ -1,298 +1,438 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bingo</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#b71c1c" />
 
-<style>
-body{
-    margin:0;
-    font-family:Arial, sans-serif;
-    text-align:center;
-    background:url("background.jpg") no-repeat center center fixed;
-    background-size:cover;
-    overflow-x:hidden;
-}
+  <title>Bingo</title>
 
-h1{
-    color:white;
-    text-shadow:2px 2px 5px black;
-}
+  <!-- PWA / Homescreen -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-button{
-    margin:4px;
-    padding:10px 14px;
-    border:none;
-    border-radius:20px;
-    font-weight:bold;
-    cursor:pointer;
-}
+  <style>
+    :root{
+      --red-dark:#b71c1c;
+      --red:#ff2d2d;
+      --text-dark:#6b0000;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-top: env(safe-area-inset-top, 0px);
+    }
 
-#newGameBtn{
-    position:fixed;
-    bottom:10px;
-    right:10px;
-    background:#b71c1c;
-    color:white;
-    z-index:5;
-}
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      text-align:center;
+      background: url("background.jpg") no-repeat center center fixed;
+      background-size: cover;
+      overflow-x:hidden;
+      padding-top: calc(8px + var(--safe-top));
+      padding-bottom: calc(70px + var(--safe-bottom)); /* ruimte voor Nieuw spel knop */
+    }
 
-#drawButton{
-    background:darkred;
-    color:white;
-    font-size:1.8em;
-    padding:14px 35px;
-}
+    h1{
+      color:white;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.85);
+      margin: 16px 8px 10px;
+      letter-spacing: 1px;
+    }
 
-#numberDisplay{
-    margin:10px auto;
-    width:140px;
-    height:140px;
-    border-radius:50%;
-    background:radial-gradient(circle at 30% 30%, white, red);
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    color:darkred;
-    font-weight:bold;
-}
+    /* Knoppen */
+    .controls{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:6px;
+      padding: 0 10px;
+      margin-bottom: 8px;
+    }
 
-.animatePop{ animation: pop 0.4s ease; }
-.animateBlink{ animation: blink 0.6s linear 2; }
-.animateSpin{ animation: spin 0.6s ease; }
+    button{
+      border:none;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor:pointer;
+      background: rgba(255,255,255,0.92);
+      color: #5b0000;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:active{ transform: translateY(1px); }
 
-@keyframes pop{
-    0%{transform:scale(0.3);}
-    60%{transform:scale(1.2);}
-    100%{transform:scale(1);}
-}
-@keyframes blink{
-    0%,50%,100%{opacity:1;}
-    25%,75%{opacity:0;}
-}
-@keyframes spin{
-    from{transform:rotate(0deg);}
-    to{transform:rotate(360deg);}
-}
+    #drawButton{
+      background: var(--red-dark);
+      color: white;
+      font-size: 1.6rem;
+      padding: 14px 34px;
+      margin: 8px 0 6px;
+    }
 
-#grid{
-    display:grid;
-    grid-template-columns:repeat(16, 1fr);
-    gap:6px;
-    max-width:900px;
-    margin:10px auto;
-}
+    /* Nieuw spel rechtsonder */
+    #newGameBtn{
+      position: fixed;
+      right: 10px;
+      bottom: calc(10px + var(--safe-bottom));
+      background: var(--red-dark);
+      color: white;
+      z-index: 10;
+    }
 
-.cell,.letterBall{
-    border-radius:50%;
-    aspect-ratio:1/1;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-weight:bold;
-}
+    /* Grote bal */
+    #numberDisplay{
+      margin: 8px auto 10px;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ffffff, var(--red));
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      color: var(--text-dark);
+      font-weight: 900;
+      box-shadow: inset -7px -7px 14px rgba(0,0,0,0.25), 0 12px 22px rgba(0,0,0,0.22);
+    }
 
-.letterBall{
-    background:radial-gradient(circle at 30% 30%, white, darkred);
-    color:white;
-    font-size:18px;
-}
+    #numberDisplay .letter{
+      font-size: 1.4em;
+      line-height: 1;
+    }
+    #numberDisplay .num{
+      font-size: 2.4em;
+      line-height: 1;
+    }
 
-.cell{
-    background:radial-gradient(circle at 30% 30%, white, red);
-    color:darkred;
-    font-size:14px;
-}
+    /* Animaties */
+    .animatePop{ animation: pop 0.42s ease; }
+    .animateBlink{ animation: blink 0.6s linear 2; }
+    .animateSpin{ animation: spin 0.6s ease; }
 
-.drawn{
-    background:radial-gradient(circle at 30% 30%, white, #00c853);
-    color:white;
-}
+    @keyframes pop{
+      0%{transform:scale(0.35);}
+      60%{transform:scale(1.18);}
+      100%{transform:scale(1);}
+    }
+    @keyframes blink{
+      0%,50%,100%{opacity:1;}
+      25%,75%{opacity:0;}
+    }
+    @keyframes spin{
+      from{transform:rotate(0deg);}
+      to{transform:rotate(360deg);}
+    }
 
-canvas{
-    position:fixed;
-    top:0;
-    left:0;
-    pointer-events:none;
-}
-</style>
+    /* Grid */
+    #grid{
+      display:grid;
+      grid-template-columns: repeat(16, 1fr); /* letter + 15 nummers */
+      gap: 6px;
+      max-width: 900px;
+      width: min(94vw, 900px);
+      margin: 10px auto 0;
+      padding: 0 8px;
+    }
+
+    .cell, .letterBall{
+      border-radius: 50%;
+      aspect-ratio: 1/1;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      font-weight: 900;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.18);
+      user-select:none;
+    }
+
+    .letterBall{
+      background: radial-gradient(circle at 30% 30%, #ffffff, var(--red-dark));
+      color: white;
+      font-size: 18px;
+    }
+
+    .cell{
+      background: radial-gradient(circle at 30% 30%, #ffffff, var(--red));
+      color: var(--text-dark);
+      font-size: 14px;
+    }
+
+    .drawn{
+      background: radial-gradient(circle at 30% 30%, #ffffff, #00c853);
+      color: white;
+    }
+
+    /* Confetti */
+    canvas{
+      position:fixed;
+      top:0;
+      left:0;
+      pointer-events:none;
+      z-index: 50;
+    }
+
+    /* Kleine schermen */
+    @media (max-width: 420px){
+      #numberDisplay{ width: 135px; height: 135px; }
+      #grid{ gap: 5px; }
+      .cell{ font-size: 13px; }
+      .letterBall{ font-size: 16px; }
+      #drawButton{ font-size: 1.4rem; padding: 12px 28px; }
+      button{ padding: 10px 12px; }
+    }
+  </style>
 </head>
 
 <body>
+  <h1>🎉 BINGO 🎉</h1>
 
-<h1>🎉 BINGO 🎉</h1>
+  <div class="controls">
+    <button type="button" onclick="bingoConfetti('bingo.mp3')">🎵 Bingo</button>
+    <button type="button" onclick="bingoConfetti('bingo2.mp3')">🎶 Bingo 2</button>
+    <button type="button" onclick="playSound('false.mp3')">❌ Valse bingo</button>
+    <button type="button" onclick="playSound('row.mp3')">📢 1 rij</button>
+    <button type="button" onclick="playSound('full.mp3')">🏆 Volle kaart</button>
+    <button type="button" onclick="stopSound()">⏹ Stop</button>
 
-<div>
-<button onclick="bingoConfetti('bingo.mp3')">🎵 Bingo</button>
-<button onclick="bingoConfetti('bingo2.mp3')">🎶 Bingo 2</button>
-<button onclick="playSound('false.mp3')">❌ Valse bingo</button>
-<button onclick="playSound('row.mp3')">📢 1 rij</button>
-<button onclick="playSound('full.mp3')">🏆 Volle kaart</button>
-<button onclick="stopSound()">⏹ Stop</button>
-<br>
-<button onclick="playSound('proppen.mp3')">🎶 Proppen</button>
-<button onclick="playSound('bingobus.mp3')">🚌 Bingobus</button>
-<button onclick="playSound('beatit.mp3')">🕺 Beat it</button>
-<button onclick="playSound('mammamia.mp3')">💃 Mamma Mia</button>
-<button onclick="playSound('congratulations.mp3')">🎊 Congratulations</button>
-</div>
+    <button type="button" onclick="playSound('proppen.mp3')">🎶 Proppen</button>
+    <button type="button" onclick="playSound('bingobus.mp3')">🚌 Bingobus</button>
+    <button type="button" onclick="playSound('beatit.mp3')">🕺 Beat it</button>
+    <button type="button" onclick="playSound('mammamia.mp3')">💃 Mamma Mia</button>
+    <button type="button" onclick="playSound('congratulations.mp3')">🎊 Congratulations</button>
+  </div>
 
-<button id="drawButton" onclick="drawNumber()">🎱 Trek getal</button>
+  <button id="drawButton" type="button" onclick="drawNumber()">🎱 Trek getal</button>
 
-<div id="numberDisplay">?</div>
-<div id="grid"></div>
+  <div id="numberDisplay">?</div>
+  <div id="grid"></div>
 
-<button id="newGameBtn" onclick="newGame()">🔄 Nieuw spel</button>
+  <button id="newGameBtn" type="button" onclick="newGame()">🔄 Nieuw spel</button>
 
-<canvas id="confetti"></canvas>
+  <canvas id="confetti"></canvas>
 
 <script>
-let numbers=[];
-let drawnNumbers=[];
-let audio=null;
-
-const canvas=document.getElementById("confetti");
-const ctx=canvas.getContext("2d");
-let confetti=[];
-
-/* OPSLAAN */
-function saveGame(){
-  localStorage.setItem("numbers", JSON.stringify(numbers));
-  localStorage.setItem("drawnNumbers", JSON.stringify(drawnNumbers));
-  localStorage.setItem("lastDisplay", document.getElementById("numberDisplay").innerHTML);
+/* =========================
+   PWA / Offline (service worker)
+   ========================= */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
 
-/* LADEN */
-function loadGame(){
-  const savedNumbers = localStorage.getItem("numbers");
-  const savedDrawn = localStorage.getItem("drawnNumbers");
-  const savedDisplay = localStorage.getItem("lastDisplay");
+/* =========================
+   State / opslag
+   ========================= */
+const STORE = {
+  numbers: "bingo_numbers_v1",
+  drawn: "bingo_drawn_v1",
+  last: "bingo_lastDisplay_v1"
+};
 
-  if(savedNumbers && savedDrawn){
-    numbers = JSON.parse(savedNumbers);
-    drawnNumbers = JSON.parse(savedDrawn);
-    initGrid();
-    drawnNumbers.forEach(n=>{
-      document.getElementById("cell"+n).classList.add("drawn");
-    });
-    if(savedDisplay){
-      document.getElementById("numberDisplay").innerHTML = savedDisplay;
-    }
-  } else {
-    newGame();
-  }
+let numbers = [];
+let drawnNumbers = [];
+let audio = null;
+
+/* =========================
+   Confetti
+   ========================= */
+const canvas = document.getElementById("confetti");
+const ctx = canvas.getContext("2d");
+let confetti = [];
+
+function resizeCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 }
-
-function initGrid(){
-  const grid=document.getElementById("grid");
-  grid.innerHTML="";
-  const letters=["B","I","N","G","O"];
-  let start=1;
-
-  for(let r=0;r<5;r++){
-    let l=document.createElement("div");
-    l.className="letterBall";
-    l.textContent=letters[r];
-    grid.appendChild(l);
-
-    for(let i=start;i<start+15;i++){
-      let d=document.createElement("div");
-      d.className="cell";
-      d.id="cell"+i;
-      d.textContent=i;
-      grid.appendChild(d);
-    }
-    start+=15;
-  }
-}
-
-function newGame(){
-  if(!confirm("Nieuw spel starten?")) return;
-  numbers=[];
-  drawnNumbers=[];
-  for(let i=1;i<=75;i++) numbers.push(i);
-  localStorage.clear();
-  initGrid();
-  document.getElementById("numberDisplay").textContent="?";
-}
-
-function drawNumber(){
-  if(numbers.length===0){
-    alert("Alle getallen zijn geweest!");
-    return;
-  }
-
-  let idx=Math.floor(Math.random()*numbers.length);
-  let n=numbers.splice(idx,1)[0];
-  drawnNumbers.push(n);
-
-  let letter = n<=15?"B":n<=30?"I":n<=45?"N":n<=60?"G":"O";
-  const display=document.getElementById("numberDisplay");
-
-  display.innerHTML =
-    `<div style="font-size:1.4em">${letter}</div>
-     <div style="font-size:2.4em">${n}</div>`;
-
-  display.classList.remove("animatePop","animateBlink","animateSpin");
-  void display.offsetWidth;
-  display.classList.add("animateSpin","animatePop","animateBlink");
-
-  document.getElementById("cell"+n).classList.add("drawn");
-
-  saveGame();
-}
-
-function playSound(f){
-  stopSound();
-  audio=new Audio(f);
-  audio.play();
-}
-
-function stopSound(){
-  if(audio){
-    audio.pause();
-    audio.currentTime=0;
-    audio=null;
-  }
-}
-
-function bingoConfetti(f){
-  playSound(f);
-  launchConfetti();
-}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
 function launchConfetti(){
-  confetti=[];
-  for(let i=0;i<120;i++){
+  confetti = [];
+  for (let i = 0; i < 140; i++){
     confetti.push({
-      x:Math.random()*canvas.width,
-      y:-20,
-      r:4+Math.random()*4,
-      s:2+Math.random()*3,
-      c:`hsl(${Math.random()*360},100%,50%)`
+      x: Math.random() * canvas.width,
+      y: -20,
+      r: 4 + Math.random() * 4,
+      s: 2 + Math.random() * 3,
+      c: `hsl(${Math.random()*360},100%,50%)`
     });
   }
   animateConfetti();
 }
-
 function animateConfetti(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   confetti.forEach(p=>{
     ctx.beginPath();
     ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle=p.c;
+    ctx.fillStyle = p.c;
     ctx.fill();
-    p.y+=p.s;
+    p.y += p.s;
   });
-  confetti=confetti.filter(p=>p.y<canvas.height);
-  if(confetti.length>0) requestAnimationFrame(animateConfetti);
+  confetti = confetti.filter(p=>p.y < canvas.height);
+  if (confetti.length > 0) requestAnimationFrame(animateConfetti);
 }
 
-/* START */
+/* =========================
+   UI helpers
+   ========================= */
+function setDisplay(letter, num){
+  const display = document.getElementById("numberDisplay");
+  display.innerHTML = `
+    <div class="letter">${letter}</div>
+    <div class="num">${num}</div>
+  `;
+
+  display.classList.remove("animatePop","animateBlink","animateSpin");
+  void display.offsetWidth; // reset animatie
+  display.classList.add("animateSpin","animatePop","animateBlink");
+}
+
+function letterFor(n){
+  if (n <= 15) return "B";
+  if (n <= 30) return "I";
+  if (n <= 45) return "N";
+  if (n <= 60) return "G";
+  return "O";
+}
+
+/* =========================
+   Grid
+   ========================= */
+function initGrid(){
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  const letters = ["B","I","N","G","O"];
+  let start = 1;
+
+  for (let r=0; r<5; r++){
+    const l = document.createElement("div");
+    l.className = "letterBall";
+    l.textContent = letters[r];
+    grid.appendChild(l);
+
+    for (let i=start; i<start+15; i++){
+      const d = document.createElement("div");
+      d.className = "cell";
+      d.id = "cell" + i;
+      d.textContent = i;
+      grid.appendChild(d);
+    }
+    start += 15;
+  }
+}
+
+/* =========================
+   Opslaan / laden
+   ========================= */
+function saveGame(){
+  localStorage.setItem(STORE.numbers, JSON.stringify(numbers));
+  localStorage.setItem(STORE.drawn, JSON.stringify(drawnNumbers));
+  localStorage.setItem(STORE.last, document.getElementById("numberDisplay").innerHTML);
+}
+
+function loadGame(){
+  const savedNumbers = localStorage.getItem(STORE.numbers);
+  const savedDrawn = localStorage.getItem(STORE.drawn);
+  const savedLast = localStorage.getItem(STORE.last);
+
+  initGrid();
+
+  if (savedNumbers && savedDrawn){
+    try{
+      numbers = JSON.parse(savedNumbers);
+      drawnNumbers = JSON.parse(savedDrawn);
+
+      // herstel groen
+      drawnNumbers.forEach(n=>{
+        const el = document.getElementById("cell"+n);
+        if (el) el.classList.add("drawn");
+      });
+
+      if (savedLast){
+        document.getElementById("numberDisplay").innerHTML = savedLast;
+      } else {
+        document.getElementById("numberDisplay").textContent = "?";
+      }
+      return;
+    } catch(e){
+      // valt terug op nieuw spel
+    }
+  }
+
+  startFresh();
+}
+
+function startFresh(){
+  numbers = [];
+  drawnNumbers = [];
+  for (let i=1; i<=75; i++) numbers.push(i);
+  document.getElementById("numberDisplay").textContent = "?";
+  saveGame();
+}
+
+/* =========================
+   Spel acties
+   ========================= */
+function newGame(){
+  const ok = confirm("Nieuw spel starten? (huidig spel wordt gewist)");
+  if (!ok) return;
+
+  localStorage.removeItem(STORE.numbers);
+  localStorage.removeItem(STORE.drawn);
+  localStorage.removeItem(STORE.last);
+
+  initGrid();
+  startFresh();
+}
+
+function drawNumber(){
+  if (numbers.length === 0){
+    alert("Alle getallen zijn geweest!");
+    return;
+  }
+
+  const idx = Math.floor(Math.random() * numbers.length);
+  const n = numbers.splice(idx, 1)[0];
+  drawnNumbers.push(n);
+
+  const letter = letterFor(n);
+  setDisplay(letter, n);
+
+  const cell = document.getElementById("cell"+n);
+  if (cell) cell.classList.add("drawn");
+
+  saveGame();
+}
+
+/* =========================
+   Audio
+   ========================= */
+function playSound(file){
+  stopSound();
+  audio = new Audio(file);
+  audio.play().catch(()=>{});
+}
+
+function stopSound(){
+  if (audio){
+    audio.pause();
+    audio.currentTime = 0;
+    audio = null;
+  }
+}
+
+function bingoConfetti(file){
+  playSound(file);
+  launchConfetti();
+}
+
+/* =========================
+   Start
+   ========================= */
 loadGame();
 </script>
-
 </body>
 </html>
