@@ -4,12 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#b71c1c" />
-
   <title>Bingo</title>
 
-  <!-- PWA / Homescreen -->
+  <!-- PWA / Homescreen (relatieve paden) -->
   <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
@@ -18,29 +17,65 @@
       --red-dark:#b71c1c;
       --red:#ff2d2d;
       --text-dark:#6b0000;
+      --ok:#00c853;
       --safe-bottom: env(safe-area-inset-bottom, 0px);
       --safe-top: env(safe-area-inset-top, 0px);
     }
+
+    html, body { height: 100%; }
 
     body{
       margin:0;
       font-family: Arial, sans-serif;
       text-align:center;
+
+      /* ✅ achtergrond terug (relatief) */
       background: url("background.jpg") no-repeat center center fixed;
       background-size: cover;
+
       overflow-x:hidden;
       padding-top: calc(8px + var(--safe-top));
-      padding-bottom: calc(70px + var(--safe-bottom)); /* ruimte voor Nieuw spel knop */
+      padding-bottom: calc(88px + var(--safe-bottom)); /* ruimte voor Nieuw spel knop */
+      min-height: calc(var(--vh, 1vh) * 100);
     }
 
     h1{
       color:white;
       text-shadow: 2px 2px 5px rgba(0,0,0,0.85);
-      margin: 16px 8px 10px;
+      margin: 14px 8px 8px;
       letter-spacing: 1px;
     }
 
-    /* Knoppen */
+    /* Top actions */
+    .topbar{
+      display:flex;
+      justify-content:center;
+      gap:8px;
+      flex-wrap:wrap;
+      padding: 0 10px;
+      margin-bottom: 6px;
+      align-items:center;
+    }
+
+    .statusPill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.35);
+      color: white;
+      font-weight: 800;
+      font-size: 0.9rem;
+      user-select:none;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:50%;
+      background: rgba(255,255,255,0.55);
+    }
+    .dot.on{ background: var(--ok); }
+
+    /* Buttons */
     .controls{
       display:flex;
       flex-wrap:wrap;
@@ -54,7 +89,7 @@
       border:none;
       border-radius: 999px;
       padding: 10px 14px;
-      font-weight: 700;
+      font-weight: 900;
       cursor:pointer;
       background: rgba(255,255,255,0.92);
       color: #5b0000;
@@ -70,6 +105,20 @@
       font-size: 1.6rem;
       padding: 14px 34px;
       margin: 8px 0 6px;
+    }
+    #drawButton[disabled]{
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Stop knop duidelijk */
+    .stopBtn{
+      background: #ffebee;
+      color: #b00020;
+      border: 2px solid rgba(176,0,32,0.25);
+      padding: 12px 18px;
+      font-size: 1.05rem;
     }
 
     /* Nieuw spel rechtsonder */
@@ -97,15 +146,8 @@
       font-weight: 900;
       box-shadow: inset -7px -7px 14px rgba(0,0,0,0.25), 0 12px 22px rgba(0,0,0,0.22);
     }
-
-    #numberDisplay .letter{
-      font-size: 1.4em;
-      line-height: 1;
-    }
-    #numberDisplay .num{
-      font-size: 2.4em;
-      line-height: 1;
-    }
+    #numberDisplay .letter{ font-size: 1.4em; line-height: 1; }
+    #numberDisplay .num{ font-size: 2.4em; line-height: 1; }
 
     /* Animaties */
     .animatePop{ animation: pop 0.42s ease; }
@@ -129,7 +171,7 @@
     /* Grid */
     #grid{
       display:grid;
-      grid-template-columns: repeat(16, 1fr); /* letter + 15 nummers */
+      grid-template-columns: repeat(16, 1fr);
       gap: 6px;
       max-width: 900px;
       width: min(94vw, 900px);
@@ -161,7 +203,7 @@
     }
 
     .drawn{
-      background: radial-gradient(circle at 30% 30%, #ffffff, #00c853);
+      background: radial-gradient(circle at 30% 30%, #ffffff, var(--ok));
       color: white;
     }
 
@@ -174,7 +216,71 @@
       z-index: 50;
     }
 
-    /* Kleine schermen */
+    /* History modal */
+    .modalBackdrop{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,0.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index: 100;
+      padding: 16px;
+    }
+    .modalBackdrop.open{ display:flex; }
+
+    .modal{
+      width: min(720px, 96vw);
+      max-height: min(80vh, 720px);
+      background: rgba(255,255,255,0.97);
+      border-radius: 18px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      text-align:left;
+    }
+    .modalHeader{
+      padding: 12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      background: linear-gradient(90deg, rgba(183,28,28,0.95), rgba(255,45,45,0.95));
+      color:white;
+      font-weight: 900;
+    }
+    .modalBody{
+      padding: 12px 14px 14px;
+      overflow:auto;
+    }
+    .historyGrid{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      padding-top: 8px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(183,28,28,0.10);
+      border: 1px solid rgba(183,28,28,0.25);
+      font-weight: 900;
+      color: #7a0000;
+      min-width: 64px;
+    }
+    .modalFooter{
+      display:flex;
+      gap:8px;
+      padding: 12px 14px;
+      border-top: 1px solid rgba(0,0,0,0.1);
+      justify-content:flex-end;
+      background: rgba(255,255,255,0.9);
+    }
+
     @media (max-width: 420px){
       #numberDisplay{ width: 135px; height: 135px; }
       #grid{ gap: 5px; }
@@ -182,6 +288,7 @@
       .letterBall{ font-size: 16px; }
       #drawButton{ font-size: 1.4rem; padding: 12px 28px; }
       button{ padding: 10px 12px; }
+      .stopBtn{ padding: 12px 16px; }
     }
   </style>
 </head>
@@ -189,19 +296,29 @@
 <body>
   <h1>🎉 BINGO 🎉</h1>
 
+  <div class="topbar">
+    <button type="button" onclick="openHistory()">📜 Geschiedenis</button>
+    <button type="button" onclick="toggleWakeLock()">🔆 Scherm aanhouden</button>
+    <span class="statusPill">
+      <span id="wakeDot" class="dot"></span>
+      <span id="wakeText">Uit</span>
+    </span>
+  </div>
+
   <div class="controls">
     <button type="button" onclick="bingoConfetti('bingo.mp3')">🎵 Bingo</button>
     <button type="button" onclick="bingoConfetti('bingo2.mp3')">🎶 Bingo 2</button>
     <button type="button" onclick="playSound('false.mp3')">❌ Valse bingo</button>
     <button type="button" onclick="playSound('row.mp3')">📢 1 rij</button>
     <button type="button" onclick="playSound('full.mp3')">🏆 Volle kaart</button>
-    <button type="button" onclick="stopSound()">⏹ Stop</button>
 
     <button type="button" onclick="playSound('proppen.mp3')">🎶 Proppen</button>
     <button type="button" onclick="playSound('bingobus.mp3')">🚌 Bingobus</button>
     <button type="button" onclick="playSound('beatit.mp3')">🕺 Beat it</button>
     <button type="button" onclick="playSound('mammamia.mp3')">💃 Mamma Mia</button>
     <button type="button" onclick="playSound('congratulations.mp3')">🎊 Congratulations</button>
+
+    <button type="button" class="stopBtn" onclick="stopSound()">⏹ Stop</button>
   </div>
 
   <button id="drawButton" type="button" onclick="drawNumber()">🎱 Trek getal</button>
@@ -213,26 +330,52 @@
 
   <canvas id="confetti"></canvas>
 
+  <!-- Geschiedenis modal -->
+  <div id="historyBackdrop" class="modalBackdrop" onclick="backdropClick(event)">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Trekgeschiedenis">
+      <div class="modalHeader">
+        <div>📜 Trekgeschiedenis</div>
+        <button type="button" onclick="closeHistory()">✖</button>
+      </div>
+      <div class="modalBody">
+        <div><strong>Aantal getrokken:</strong> <span id="historyCount">0</span></div>
+        <div class="historyGrid" id="historyGrid"></div>
+      </div>
+      <div class="modalFooter">
+        <button type="button" onclick="closeHistory()">Sluiten</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 /* =========================
-   PWA / Offline (service worker)
+   iOS rotate/viewport fix
+   ========================= */
+function setVH(){
+  const vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+
+/* =========================
+   Service Worker
    ========================= */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
 
 /* =========================
-   State / opslag
+   Storage
    ========================= */
 const STORE = {
-  numbers: "bingo_numbers_v1",
-  drawn: "bingo_drawn_v1",
-  last: "bingo_lastDisplay_v1"
+  numbers: "bingo_numbers_v3",
+  drawn: "bingo_drawn_v3",
+  last: "bingo_lastDisplay_v3"
 };
 
 let numbers = [];
 let drawnNumbers = [];
-let audio = null;
+let currentAudio = null;
+let fadeTimer = null;
 
 /* =========================
    Confetti
@@ -245,17 +388,23 @@ function resizeCanvas(){
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 }
-resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
+function handleResize(){
+  setVH();
+  resizeCanvas();
+}
+handleResize();
+window.addEventListener("resize", handleResize);
+window.addEventListener("orientationchange", () => setTimeout(handleResize, 200));
+window.addEventListener("pageshow", handleResize);
 
 function launchConfetti(){
   confetti = [];
-  for (let i = 0; i < 140; i++){
+  for (let i=0;i<140;i++){
     confetti.push({
-      x: Math.random() * canvas.width,
+      x: Math.random()*canvas.width,
       y: -20,
-      r: 4 + Math.random() * 4,
-      s: 2 + Math.random() * 3,
+      r: 4 + Math.random()*4,
+      s: 2 + Math.random()*3,
       c: `hsl(${Math.random()*360},100%,50%)`
     });
   }
@@ -270,31 +419,27 @@ function animateConfetti(){
     ctx.fill();
     p.y += p.s;
   });
-  confetti = confetti.filter(p=>p.y < canvas.height);
-  if (confetti.length > 0) requestAnimationFrame(animateConfetti);
+  confetti = confetti.filter(p=>p.y<canvas.height);
+  if(confetti.length>0) requestAnimationFrame(animateConfetti);
 }
 
 /* =========================
-   UI helpers
+   Helpers
    ========================= */
-function setDisplay(letter, num){
-  const display = document.getElementById("numberDisplay");
-  display.innerHTML = `
-    <div class="letter">${letter}</div>
-    <div class="num">${num}</div>
-  `;
-
-  display.classList.remove("animatePop","animateBlink","animateSpin");
-  void display.offsetWidth; // reset animatie
-  display.classList.add("animateSpin","animatePop","animateBlink");
+function letterFor(n){
+  if (n<=15) return "B";
+  if (n<=30) return "I";
+  if (n<=45) return "N";
+  if (n<=60) return "G";
+  return "O";
 }
 
-function letterFor(n){
-  if (n <= 15) return "B";
-  if (n <= 30) return "I";
-  if (n <= 45) return "N";
-  if (n <= 60) return "G";
-  return "O";
+function setDisplay(letter, num){
+  const display = document.getElementById("numberDisplay");
+  display.innerHTML = `<div class="letter">${letter}</div><div class="num">${num}</div>`;
+  display.classList.remove("animatePop","animateBlink","animateSpin");
+  void display.offsetWidth;
+  display.classList.add("animateSpin","animatePop","animateBlink");
 }
 
 /* =========================
@@ -307,16 +452,16 @@ function initGrid(){
   const letters = ["B","I","N","G","O"];
   let start = 1;
 
-  for (let r=0; r<5; r++){
+  for(let r=0;r<5;r++){
     const l = document.createElement("div");
     l.className = "letterBall";
     l.textContent = letters[r];
     grid.appendChild(l);
 
-    for (let i=start; i<start+15; i++){
+    for(let i=start;i<start+15;i++){
       const d = document.createElement("div");
       d.className = "cell";
-      d.id = "cell" + i;
+      d.id = "cell"+i;
       d.textContent = i;
       grid.appendChild(d);
     }
@@ -325,7 +470,7 @@ function initGrid(){
 }
 
 /* =========================
-   Opslaan / laden
+   Save / Load
    ========================= */
 function saveGame(){
   localStorage.setItem(STORE.numbers, JSON.stringify(numbers));
@@ -333,52 +478,65 @@ function saveGame(){
   localStorage.setItem(STORE.last, document.getElementById("numberDisplay").innerHTML);
 }
 
+function startFresh(){
+  numbers = [];
+  drawnNumbers = [];
+  for(let i=1;i<=75;i++) numbers.push(i);
+  document.getElementById("numberDisplay").textContent = "?";
+  saveGame();
+  renderHistory();
+}
+
 function loadGame(){
+  initGrid();
+
   const savedNumbers = localStorage.getItem(STORE.numbers);
   const savedDrawn = localStorage.getItem(STORE.drawn);
   const savedLast = localStorage.getItem(STORE.last);
 
-  initGrid();
-
-  if (savedNumbers && savedDrawn){
+  if(savedNumbers && savedDrawn){
     try{
-      numbers = JSON.parse(savedNumbers);
-      drawnNumbers = JSON.parse(savedDrawn);
+      numbers = JSON.parse(savedNumbers) || [];
+      drawnNumbers = JSON.parse(savedDrawn) || [];
 
-      // herstel groen
       drawnNumbers.forEach(n=>{
         const el = document.getElementById("cell"+n);
-        if (el) el.classList.add("drawn");
+        if(el) el.classList.add("drawn");
       });
 
-      if (savedLast){
+      if(savedLast){
         document.getElementById("numberDisplay").innerHTML = savedLast;
       } else {
         document.getElementById("numberDisplay").textContent = "?";
       }
-      return;
-    } catch(e){
-      // valt terug op nieuw spel
-    }
-  }
 
+      renderHistory();
+      return;
+    } catch(e) {}
+  }
   startFresh();
 }
 
-function startFresh(){
-  numbers = [];
-  drawnNumbers = [];
-  for (let i=1; i<=75; i++) numbers.push(i);
-  document.getElementById("numberDisplay").textContent = "?";
-  saveGame();
+/* =========================
+   Draw button block
+   ========================= */
+let drawLocked = false;
+function lockDraw(ms=650){
+  drawLocked = true;
+  const btn = document.getElementById("drawButton");
+  btn.disabled = true;
+  setTimeout(()=>{
+    drawLocked = false;
+    btn.disabled = false;
+  }, ms);
 }
 
 /* =========================
-   Spel acties
+   Game actions
    ========================= */
 function newGame(){
   const ok = confirm("Nieuw spel starten? (huidig spel wordt gewist)");
-  if (!ok) return;
+  if(!ok) return;
 
   localStorage.removeItem(STORE.numbers);
   localStorage.removeItem(STORE.drawn);
@@ -389,39 +547,127 @@ function newGame(){
 }
 
 function drawNumber(){
-  if (numbers.length === 0){
+  if(drawLocked) return;
+  lockDraw(650);
+
+  if(numbers.length===0){
     alert("Alle getallen zijn geweest!");
     return;
   }
 
-  const idx = Math.floor(Math.random() * numbers.length);
-  const n = numbers.splice(idx, 1)[0];
+  const idx = Math.floor(Math.random()*numbers.length);
+  const n = numbers.splice(idx,1)[0];
   drawnNumbers.push(n);
 
-  const letter = letterFor(n);
-  setDisplay(letter, n);
+  setDisplay(letterFor(n), n);
 
   const cell = document.getElementById("cell"+n);
-  if (cell) cell.classList.add("drawn");
+  if(cell) cell.classList.add("drawn");
 
   saveGame();
+  renderHistory();
 }
 
 /* =========================
-   Audio
+   History UI (✅ altijd correct)
    ========================= */
-function playSound(file){
-  stopSound();
-  audio = new Audio(file);
-  audio.play().catch(()=>{});
+function openHistory(){
+  renderHistory();
+  document.getElementById("historyBackdrop").classList.add("open");
+}
+function closeHistory(){
+  document.getElementById("historyBackdrop").classList.remove("open");
+}
+function backdropClick(e){
+  if(e.target && e.target.id==="historyBackdrop") closeHistory();
+}
+function renderHistory(){
+  const grid = document.getElementById("historyGrid");
+  const count = document.getElementById("historyCount");
+  if(!grid || !count) return;
+
+  count.textContent = String(drawnNumbers.length);
+  grid.innerHTML = "";
+
+  // nieuwste bovenaan
+  const list = [...drawnNumbers].reverse();
+  for(const n of list){
+    const chip = document.createElement("div");
+    chip.className = "chip";
+    chip.textContent = `${letterFor(n)} ${n}`;
+    grid.appendChild(chip);
+  }
 }
 
-function stopSound(){
-  if (audio){
-    audio.pause();
-    audio.currentTime = 0;
-    audio = null;
+/* =========================
+   Audio preload + fade-out stop
+   ========================= */
+const SOUND_FILES = [
+  "bingo.mp3","bingo2.mp3","false.mp3","row.mp3","full.mp3",
+  "proppen.mp3","bingobus.mp3","beatit.mp3","mammamia.mp3","congratulations.mp3"
+];
+
+const sounds = new Map();
+
+function preloadAudio(){
+  for(const file of SOUND_FILES){
+    const a = new Audio(file);     // ✅ relatief
+    a.preload = "auto";
+    try { a.load(); } catch {}
+    sounds.set(file, a);
   }
+}
+preloadAudio();
+
+function playSound(file){
+  stopSound(true); // hard stop (geen fade) voordat nieuwe start
+  const a = sounds.get(file) || new Audio(file);
+  currentAudio = a;
+
+  try{
+    a.currentTime = 0;
+    a.volume = 1;
+  } catch {}
+
+  a.play().catch(()=>{});
+}
+
+function stopSound(hard=false){
+  if(!currentAudio) return;
+
+  if(fadeTimer){
+    clearInterval(fadeTimer);
+    fadeTimer = null;
+  }
+
+  const a = currentAudio;
+
+  if(hard){
+    try { a.pause(); a.currentTime = 0; a.volume = 1; } catch {}
+    currentAudio = null;
+    return;
+  }
+
+  // Fade-out 0.5 sec
+  const durationMs = 500;
+  const steps = 20;
+  const stepMs = Math.max(10, Math.floor(durationMs/steps));
+  let i = 0;
+  const startVol = (typeof a.volume === "number") ? a.volume : 1;
+
+  fadeTimer = setInterval(()=>{
+    i++;
+    const t = i/steps;
+    const v = Math.max(0, startVol*(1-t));
+    try { a.volume = v; } catch {}
+
+    if(i>=steps){
+      clearInterval(fadeTimer);
+      fadeTimer = null;
+      try { a.pause(); a.currentTime = 0; a.volume = 1; } catch {}
+      currentAudio = null;
+    }
+  }, stepMs);
 }
 
 function bingoConfetti(file){
@@ -430,8 +676,55 @@ function bingoConfetti(file){
 }
 
 /* =========================
+   Wake Lock
+   ========================= */
+let wakeLock = null;
+
+function setWakeUI(on){
+  const dot = document.getElementById("wakeDot");
+  const txt = document.getElementById("wakeText");
+  if(on){ dot.classList.add("on"); txt.textContent="Aan"; }
+  else { dot.classList.remove("on"); txt.textContent="Uit"; }
+}
+
+async function toggleWakeLock(){
+  if(!("wakeLock" in navigator)){
+    alert("Scherm aanhouden wordt op iPhone meestal niet ondersteund. Op Android/Chrome werkt dit vaak wél.");
+    return;
+  }
+
+  try{
+    if(wakeLock){
+      await wakeLock.release();
+      wakeLock = null;
+      setWakeUI(false);
+      return;
+    }
+    wakeLock = await navigator.wakeLock.request("screen");
+    setWakeUI(true);
+    wakeLock.addEventListener("release", ()=>{
+      wakeLock = null;
+      setWakeUI(false);
+    });
+  } catch(e){
+    wakeLock = null;
+    setWakeUI(false);
+    alert("Kon scherm aanhouden niet inschakelen (mogelijk niet toegestaan of batterijbesparing actief).");
+  }
+}
+
+document.addEventListener("visibilitychange", ()=>{
+  // Als je terugkomt, moet gebruiker meestal opnieuw klikken (browser policy)
+  if(document.visibilityState==="visible" && wakeLock){
+    wakeLock = null;
+    setWakeUI(false);
+  }
+});
+
+/* =========================
    Start
    ========================= */
+setWakeUI(false);
 loadGame();
 </script>
 </body>
